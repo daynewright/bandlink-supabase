@@ -3,6 +3,7 @@ name: Production Release
 on:
   workflow_run:
     workflows: ["CI Flow"]
+    branches: [main]
     types:
       - completed
   push:
