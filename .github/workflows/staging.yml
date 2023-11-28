@@ -2,7 +2,8 @@ name: Staging Release
 
 on:
   workflow_run:
-    workflows: ["CI Flow"]
+    workflows: ["CI Tests"]
+    branches: [develop]
     types:
       - completed
   push:
