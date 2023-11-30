@@ -88,9 +88,9 @@ VALUES
 -- Seed data for "events" table
 INSERT INTO public.events (id, created_at, event_name, description, event_date, start_time, end_time, band_id, creator_user_id, owner_user_id)
 VALUES 
-  ('db6d3c61-9e5b-4c3a-b8b9-1c2f71d3e0f5', NOW(), 'High School Concert', 'Annual concert showcasing our talented students', '2023-04-15', '18:00', '21:00', 'b63df5e0-9f5f-420e-a6d7-7c96c03f8724', '8b6d3c61-9e5b-4c3a-b8b9-1c2f71d3e0f0', '8b6d3c61-9e5b-4c3a-b8b9-1c2f71d3e0f0'),
-  ('eb6d3c61-9e5b-4c3a-b8b9-1c2f71d3e0f6', NOW(), 'Jazz Night', 'An evening filled with smooth jazz melodies', '2023-05-20', '20:00', '23:00', 'b63df5e0-9f5f-420e-a6d7-7c96c03f8724', '8b6d3c61-9e5b-4c3a-b8b9-1c2f71d3e0f0', '8b6d3c61-9e5b-4c3a-b8b9-1c2f71d3e0f0'),
-  ('fb6d3c61-9e5b-4c3a-b8b9-1c2f71d3e0fa', NOW(), 'Rock Fest', 'A high-energy rock concert featuring local bands', '2023-06-10', '19:00', '22:00', 'b63df5e0-9f5f-420e-a6d7-7c96c03f8724', 'ab6d3c61-9e5b-4c3a-b8b9-1c2f71d3e0f3', 'ab6d3c61-9e5b-4c3a-b8b9-1c2f71d3e0f3');
+  ('db6d3c61-9e5b-4c3a-b8b9-1c2f71d3e0f5', NOW(), 'High School Concert', 'Annual concert showcasing our talented students', NOW() + '5 days', NOW() + '5 days', NOW() + '3 hours', 'b63df5e0-9f5f-420e-a6d7-7c96c03f8724', '8b6d3c61-9e5b-4c3a-b8b9-1c2f71d3e0f0', '8b6d3c61-9e5b-4c3a-b8b9-1c2f71d3e0f0'),
+  ('eb6d3c61-9e5b-4c3a-b8b9-1c2f71d3e0f6', NOW(), 'Jazz Night', 'An evening filled with smooth jazz melodies', NOW() + '10 days', NOW() + '10 days', NOW() + '6 hours', 'b63df5e0-9f5f-420e-a6d7-7c96c03f8724', '8b6d3c61-9e5b-4c3a-b8b9-1c2f71d3e0f0', '8b6d3c61-9e5b-4c3a-b8b9-1c2f71d3e0f0'),
+  ('fb6d3c61-9e5b-4c3a-b8b9-1c2f71d3e0fa', NOW(), 'Rock Fest', 'A high-energy rock concert featuring local bands', NOW() + '45 days', NOW() + '45 days', NOW() + '10 hours', 'b63df5e0-9f5f-420e-a6d7-7c96c03f8724', 'ab6d3c61-9e5b-4c3a-b8b9-1c2f71d3e0f3', 'ab6d3c61-9e5b-4c3a-b8b9-1c2f71d3e0f3');
 
 -- Seed data for "groups" table
 INSERT INTO public.groups (id, created_at, group_name, band_id)
