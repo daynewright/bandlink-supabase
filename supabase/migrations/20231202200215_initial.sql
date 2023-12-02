@@ -26,38 +26,27 @@ CREATE EXTENSION IF NOT EXISTS "supabase_vault" WITH SCHEMA "vault";
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
 
--- Create or update "attendence_status" type
-IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'attendence_status') THEN
-    CREATE TYPE "public"."attendence_status" AS ENUM (
-        'ATTENDING',
-        'NOT_ATTENDING',
-        'MAYBE_ATTENDING'
-    );
-END IF;
+CREATE TYPE "public"."attendence_status" AS ENUM  (
+    'ATTENDING',
+    'NOT_ATTENDING',
+    'MAYBE_ATTENDING'
+);
 
--- Ensure ownership of "attendence_status" type
 ALTER TYPE "public"."attendence_status" OWNER TO "postgres";
 
--- Create or update "conversation_type" type
-IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'conversation_type') THEN
-    CREATE TYPE "public"."conversation_type" AS ENUM (
-        'GROUP',
-        'EVENT',
-        'USER'
-    );
-END IF;
+CREATE TYPE "public"."conversation_type" AS ENUM (
+    'GROUP',
+    'EVENT',
+    'USER'
+);
 
--- Ensure ownership of "conversation_type" type
 ALTER TYPE "public"."conversation_type" OWNER TO "postgres";
 
--- Create or update "user_status" type
-IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_status') THEN
-    CREATE TYPE "public"."user_status" AS ENUM (
-        'ACTIVE',
-        'DEACTIVATED',
-        'BLOCKED'
-    );
-END IF;
+CREATE TYPE "public"."user_status" AS ENUM (
+    'ACTIVE',
+    'DEACTIVATED',
+    'BLOCKED'
+);
 
 ALTER TYPE "public"."user_status" OWNER TO "postgres";
 
