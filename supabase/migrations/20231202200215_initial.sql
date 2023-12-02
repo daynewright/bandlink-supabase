@@ -10,6 +10,8 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+CREATE EXTENSION IF NOT EXISTS "pg_net" WITH SCHEMA "extensions";
+
 CREATE EXTENSION IF NOT EXISTS "pgsodium" WITH SCHEMA "pgsodium";
 
 CREATE EXTENSION IF NOT EXISTS "pg_graphql" WITH SCHEMA "graphql";
@@ -24,7 +26,7 @@ CREATE EXTENSION IF NOT EXISTS "supabase_vault" WITH SCHEMA "vault";
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
 
-CREATE TYPE "public"."attendence_status" AS ENUM (
+CREATE TYPE "public"."attendence_status" AS ENUM  (
     'ATTENDING',
     'NOT_ATTENDING',
     'MAYBE_ATTENDING'
@@ -218,7 +220,7 @@ $$;
 
 ALTER FUNCTION "public"."get_conversations_for_user"("p_user_id" "uuid") OWNER TO "postgres";
 
-CREATE OR REPLACE FUNCTION "public"."get_events_for_user_in_band"("p_band_id" "uuid", "p_page_number" integer, "p_items_per_page" integer, "p_sort_order" character varying) RETURNS TABLE("event_id" "uuid", "event_name" "text", "description" "text", "event_date" timestamp with time zone, "start_time" time with time zone, "end_time" time with time zone, "creator_user_id" "uuid", "creator_name" "text", "creator_picture" "text", "attendees_count" bigint, "messages_count" bigint, "group_names" "text"[])
+CREATE OR REPLACE FUNCTION "public"."get_events_for_user_in_band"("p_band_id" "uuid", "p_page_number" integer, "p_items_per_page" integer, "p_sort_order" character varying) RETURNS TABLE("event_id" "uuid", "event_name" "text", "description" "text", "event_date" timestamp with time zone, "start_time" timestamp with time zone, "end_time" timestamp with time zone, "creator_user_id" "uuid", "creator_name" "text", "creator_picture" "text", "attendees_count" bigint, "messages_count" bigint, "group_names" "text"[])
     LANGUAGE "plpgsql"
     AS $$
 DECLARE
@@ -235,7 +237,7 @@ BEGIN
         up.first_name || ' ' || up.last_name AS creator_name,
         i.image_path::text AS creator_picture,
         COUNT(DISTINCT ea.user_id) AS attendees_count,
-        COUNT(DISTINCT m.id) AS messages_count,  -- Count messages by conversation_id
+        COUNT(DISTINCT m.id) AS messages_count,
         ARRAY_AGG(DISTINCT g.group_name)::text[] AS group_names
     FROM
         public.events e
@@ -252,7 +254,7 @@ BEGIN
     LEFT JOIN
         public.groups g ON eg.group_id = g.id
     LEFT JOIN
-        public.messages m ON c.id = m.conversation_id  -- Join messages by conversation_id
+        public.messages m ON c.id = m.conversation_id
     WHERE
         e.band_id = p_band_id
     GROUP BY
@@ -387,7 +389,7 @@ $$;
 
 ALTER FUNCTION "public"."get_messages_for_event"("p_event_id" "uuid", "p_page_number" integer, "p_items_per_page" integer) OWNER TO "postgres";
 
-CREATE OR REPLACE FUNCTION "public"."get_single_event_with_details"("p_event_id" "uuid") RETURNS TABLE("event_id" "uuid", "event_name" "text", "description" "text", "event_date" timestamp with time zone, "start_time" time with time zone, "end_time" time with time zone, "creator_user_id" "uuid", "creator_name" "text", "creator_picture" "text", "attendees_count" bigint, "messages_count" bigint, "files" "jsonb"[], "images" "jsonb"[])
+CREATE OR REPLACE FUNCTION "public"."get_single_event_with_details"("p_event_id" "uuid") RETURNS TABLE("event_id" "uuid", "event_name" "text", "description" "text", "event_date" timestamp with time zone, "start_time" timestamp with time zone, "end_time" timestamp with time zone, "creator_user_id" "uuid", "creator_name" "text", "creator_picture" "text", "attendees_count" bigint, "messages_count" bigint, "files" "jsonb"[], "images" "jsonb"[])
     LANGUAGE "plpgsql"
     AS $$
 DECLARE
@@ -401,52 +403,44 @@ BEGIN
     FROM
         public.conversations
     WHERE
-        public.conversations.event_id = p_event_id  -- Specify the table alias
+        public.conversations.event_id = p_event_id
         AND conversation_type = 'EVENT'
     LIMIT 1;
 
-    IF v_conversation_id IS NOT NULL THEN
-        -- Retrieve event details and related information
-        RETURN QUERY
-        SELECT
-            e.id AS event_id,
-            e.event_name,
-            e.description,
-            e.event_date,
-            e.start_time,
-            e.end_time,
-            e.creator_user_id,
-            up.first_name || ' ' || up.last_name AS creator_name,
-            i.image_path::text AS creator_picture,
-            COUNT(DISTINCT ea.user_id) AS attendees_count,
-            COUNT(DISTINCT m.id) AS messages_count,
-            ARRAY_AGG(DISTINCT TO_JSONB(f.file_path)) AS files,
-            ARRAY_AGG(DISTINCT TO_JSONB(im.image_path)) AS images
-        FROM
-            public.events e
-        LEFT JOIN
-            public.event_attendance ea ON e.id = ea.event_id
-        LEFT JOIN
-            public.users_profile up ON e.creator_user_id = up.id
-        LEFT JOIN
-            public.images i ON up.profile_image_id = i.id
-        LEFT JOIN
-            public.messages m ON v_conversation_id = m.conversation_id
-        LEFT JOIN
-            public.events_files ef ON e.id = ef.event_id
-        LEFT JOIN
-            public.files f ON ef.file_id = f.id
-        LEFT JOIN
-            public.events_images ei ON e.id = ei.event_id
-        LEFT JOIN
-            public.images im ON ei.image_id = im.id
-        WHERE
-            e.id = p_event_id
-        GROUP BY
-            e.id, e.event_name, e.description, e.event_date, e.start_time, e.end_time,
-            e.creator_user_id, up.first_name, up.last_name, i.image_path::text;
+    -- Retrieve event details and related information
+    RETURN QUERY
+    SELECT
+        e.id, e.event_name, e.description, e.event_date, e.start_time, e.end_time,
+        e.creator_user_id, up.first_name || ' ' || up.last_name AS creator_name,
+        i.image_path::text AS creator_picture,
+        COUNT(DISTINCT ea.user_id) AS attendees_count,
+        COUNT(DISTINCT m.id) AS messages_count,
+        ARRAY_AGG(DISTINCT TO_JSONB(f.file_path)) AS files,
+        ARRAY_AGG(DISTINCT TO_JSONB(im.image_path)) AS images
+    FROM
+        public.events e
+    LEFT JOIN
+        public.event_attendance ea ON e.id = ea.event_id
+    LEFT JOIN
+        public.users_profile up ON e.creator_user_id = up.id
+    LEFT JOIN
+        public.images i ON up.profile_image_id = i.id
+    LEFT JOIN
+        public.messages m ON v_conversation_id = m.conversation_id
+    LEFT JOIN
+        public.events_files ef ON e.id = ef.event_id
+    LEFT JOIN
+        public.files f ON ef.file_id = f.id
+    LEFT JOIN
+        public.events_images ei ON e.id = ei.event_id
+    LEFT JOIN
+        public.images im ON ei.image_id = im.id
+    WHERE
+        e.id = p_event_id
+    GROUP BY
+        e.id, e.event_name, e.description, e.event_date, e.start_time, e.end_time,
+        e.creator_user_id, up.first_name, up.last_name, i.image_path::text;
 
-    END IF;
 END;
 $$;
 
@@ -548,12 +542,12 @@ CREATE TABLE IF NOT EXISTS "public"."events" (
     "event_name" "text" NOT NULL,
     "description" "text",
     "event_date" timestamp with time zone,
-    "start_time" time with time zone,
-    "end_time" time with time zone,
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "band_id" "uuid" NOT NULL,
     "creator_user_id" "uuid" NOT NULL,
-    "owner_user_id" "uuid"
+    "owner_user_id" "uuid",
+    "start_time" timestamp with time zone,
+    "end_time" timestamp with time zone
 );
 
 ALTER TABLE "public"."events" OWNER TO "postgres";
