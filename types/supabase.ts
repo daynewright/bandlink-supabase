@@ -607,6 +607,13 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
+      create_function_from_source: {
+        Args: {
+          function_text: string
+          schema_name?: string
+        }
+        Returns: string
+      }
       create_message_between_users: {
         Args: {
           p_sender_id: string
@@ -745,9 +752,10 @@ export interface Database {
           creator_name: string
           creator_picture: string
           attendees_count: number
+          attendees: Json
+          files: Json
+          images: Json
           messages_count: number
-          files: Json[]
-          images: Json[]
         }[]
       }
       get_users_for_event: {
@@ -760,6 +768,13 @@ export interface Database {
           image_path: string
           attendance_status: string
         }[]
+      }
+      rollback_function: {
+        Args: {
+          func_name: string
+          schema_n?: string
+        }
+        Returns: string
       }
     }
     Enums: {
