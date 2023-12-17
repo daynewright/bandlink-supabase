@@ -40,7 +40,7 @@ INSERT INTO
             '',
             ''
         FROM
-            generate_series(1, 2)
+            generate_series(1, 4)
     );
 
 -- test user email identities
@@ -67,10 +67,19 @@ INSERT INTO
     );
 
 -- Seed data for "users_profile" table
-INSERT INTO public.users_profile (id, auth_user_id, email, phone, profile_image_id, status, first_name, last_name, is_child, child_id, created_at, about, instruments, title)
+INSERT INTO public.users_profile (id, auth_user_id, email, phone, profile_image_id, status, first_name, last_name, is_child, created_at, about, instruments, title)
 VALUES 
-  (uuid_generate_v4(), (SELECT id FROM auth.users WHERE email = 'user1@example.com'), 'user1@example.com', '+1234567890', NULL, 'ACTIVE', 'John', 'Doe', false, NULL, NOW(), 'Music enthusiast', ARRAY['Guitar', 'Piano'], 'Musician'),
-  (uuid_generate_v4(), (SELECT id FROM auth.users WHERE email = 'user2@example.com'), 'user2@example.com', '+9876543210', NULL, 'ACTIVE', 'Jane', 'Smith', false, NULL, NOW(), 'Bass player', ARRAY['Bass Guitar'], 'Musician');
+  (uuid_generate_v4(), (SELECT id FROM auth.users WHERE email = 'user1@example.com'), 'user1@example.com', '+1234567890', NULL, 'ACTIVE', 'John', 'Doe', false, NOW(), 'Music enthusiast', ARRAY['Guitar', 'Piano'], 'Musician'),
+  (uuid_generate_v4(), (SELECT id FROM auth.users WHERE email = 'user2@example.com'), 'user2@example.com', '+9876543210', NULL, 'ACTIVE', 'Jane', 'Smith', false, NOW(), 'Bass player', ARRAY['Bass Guitar'], 'Musician'),
+  (uuid_generate_v4(), (SELECT id FROM auth.users WHERE email = 'user3@example.com'), 'user3@example.com', '+1234567890', NULL, 'ACTIVE', 'Bob', 'Bobby', true, NOW(), 'Rock on with ya bad self.', ARRAY['Baratone', 'Saxaphone'], 'The Best of the rest'),
+  (uuid_generate_v4(), (SELECT id FROM auth.users WHERE email = 'user4@example.com'), 'user4@example.com', '+9876543210', NULL, 'ACTIVE', 'Sue', 'Suzzy', true, NOW(), 'I am awesome and amazing and rockin!', ARRAY['Colorguard'], 'Senior colorguard');
+
+-- Seed data for "parent_child_relationship" table
+INSERT INTO public.parent_child_relationship (parent_id, child_id, created_at)
+VALUES
+    ((SELECT id FROM public.users_profile WHERE email = 'user1@example.com'), (SELECT id FROM public.users_profile WHERE email = 'user3@example.com'), NOW()),
+    ((SELECT id FROM public.users_profile WHERE email = 'user1@example.com'), (SELECT id FROM public.users_profile WHERE email = 'user4@example.com'), NOW());
+
 
 -- Seed data for "bands" table
 INSERT INTO public.bands (id, created_at, name, description, band_image_id)
@@ -88,11 +97,11 @@ FROM public.users_profile u
 CROSS JOIN public.bands b;
 
 -- Seed data for "events" table
-INSERT INTO public.events (id, created_at, event_name, description, event_date, start_time, end_time, band_id, creator_user_id, owner_user_id)
+INSERT INTO public.events (id, created_at, event_name, description, event_date, start_time, end_time, band_id, creator_user_id, owner_user_id, event_type, about, location_name)
 VALUES
-    (uuid_generate_v4(), NOW(), 'High School Concert', 'Annual concert showcasing our talented students', NOW() + '5 days', NOW() + '5 days', NOW() + '3 hours', (SELECT id FROM public.bands LIMIT 1), (SELECT id FROM public.users_profile LIMIT 1), (SELECT id FROM public.users_profile LIMIT 1)),
-    (uuid_generate_v4(), NOW(), 'Jazz Night', 'An evening filled with smooth jazz melodies', NOW() + '10 days', NOW() + '10 days', NOW() + '6 hours', (SELECT id FROM public.bands LIMIT 1), (SELECT id FROM public.users_profile LIMIT 1), (SELECT id FROM public.users_profile LIMIT 1)),
-    (uuid_generate_v4(), NOW(), 'Rock Fest', 'A high-energy rock concert featuring local bands', NOW() + '45 days', NOW() + '45 days', NOW() + '10 hours', (SELECT id FROM public.bands LIMIT 1), (SELECT id FROM public.users_profile LIMIT 1), (SELECT id FROM public.users_profile LIMIT 1));
+    (uuid_generate_v4(), NOW(), 'High School Concert', 'Annual concert showcasing our talented students', NOW() + '5 days', NOW() + '5 days', NOW() + '3 hours', (SELECT id FROM public.bands LIMIT 1), (SELECT id FROM public.users_profile LIMIT 1), (SELECT id FROM public.users_profile LIMIT 1), 'Practice', 'This is the information about this event.', 'School Gym'),
+    (uuid_generate_v4(), NOW(), 'Jazz Night', 'An evening filled with smooth jazz melodies', NOW() + '10 days', NOW() + '10 days', NOW() + '6 hours', (SELECT id FROM public.bands LIMIT 1), (SELECT id FROM public.users_profile LIMIT 1), (SELECT id FROM public.users_profile LIMIT 1), 'Performance', 'More information about this event that you can use.', 'Football Field'),
+    (uuid_generate_v4(), NOW(), 'Rock Fest', 'A high-energy rock concert featuring local bands', NOW() + '45 days', NOW() + '45 days', NOW() + '10 hours', (SELECT id FROM public.bands LIMIT 1), (SELECT id FROM public.users_profile LIMIT 1), (SELECT id FROM public.users_profile LIMIT 1), 'Training', 'This is a great event! Come join us and be there.', 'School Gym');
 
 -- Seed data for "groups" table
 INSERT INTO public.groups (id, created_at, group_name, band_id)
@@ -130,8 +139,8 @@ VALUES
     (uuid_generate_v4(), NOW(), 'Hello everyone! Do not forget about the Jazz Night rehearsal.', (SELECT id FROM public.conversations WHERE conversation_type = 'GROUP' LIMIT 1), (SELECT id FROM public.users_profile OFFSET 1 LIMIT 1)),
     (uuid_generate_v4(), NOW(), 'See you all there!', (SELECT id FROM public.conversations WHERE conversation_type = 'GROUP' LIMIT 1), (SELECT id FROM public.users_profile OFFSET 1 LIMIT 1)),
     (uuid_generate_v4(), NOW(), 'Welcome to our group everyone!', (SELECT id FROM public.conversations WHERE conversation_type = 'GROUP' LIMIT 1), (SELECT id FROM public.users_profile OFFSET 1 LIMIT 1)),
-    (uuid_generate_v4(), NOW(), '', (SELECT id FROM public.conversations WHERE conversation_type = 'GROUP' LIMIT 1), (SELECT id FROM public.users_profile OFFSET 1 LIMIT 1)),
-    (uuid_generate_v4(), NOW(), '', (SELECT id FROM public.conversations WHERE conversation_type = 'GROUP' LIMIT 1), (SELECT id FROM public.users_profile OFFSET 1 LIMIT 1));
+    (uuid_generate_v4(), NOW(), 'Hello!', (SELECT id FROM public.conversations WHERE conversation_type = 'GROUP' LIMIT 1), (SELECT id FROM public.users_profile OFFSET 1 LIMIT 1)),
+    (uuid_generate_v4(), NOW(), 'YOOOO', (SELECT id FROM public.conversations WHERE conversation_type = 'GROUP' LIMIT 1), (SELECT id FROM public.users_profile OFFSET 1 LIMIT 1));
 
 -- Seed data for "events_groups" table
 INSERT INTO public.events_groups (created_at, event_id, group_id)
